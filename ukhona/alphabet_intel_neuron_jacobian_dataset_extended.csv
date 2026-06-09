@@ -1,0 +1,13 @@
+Layer,Neuron_Component,Input_Label,Weight,Value_2023,Value_2024,Value_2025,Value_2026,Value_2027,Value_2028,Jacobian_Driver,Sensitivity_Note,Source
+θᵗ (Kapital & Infrastructure),Input_X1,In-house TPUs / Data Centers,w1,45000,60000,85000,175000-185000,200000,220000,∂Infra/∂Capex,Heavy ramp post-ChatGPT; $85B raise context,Public financials + Reuters
+θᵗ (Kapital & Infrastructure),Input_X2,TSMC Foundry,w2,0.60,0.55,0.50,0.45,0.40,0.35,∂Diversification/∂Risk,Primary supplier, reduced reliance,Deal reports + industry
+θᵗ (Kapital & Infrastructure),Input_X3,Intel,w_Intel (highlighted),0.00,0.00,0.00,0.05,0.15,0.25,∂Capacity/∂Diversification,>3M TPUs ordered for 2028,The Information / Reuters
+L (Labor/Compute),Summation_Σ,Weighted_Inputs,Σw_i,1.00,1.00,1.00,1.00,1.00,1.00,∂Compute/∂Weights,Supplier allocation sum,Neuron model
+f (Products/Tokens),Activation_f,Revenue (Tokens Scale),σ²,307394,350018,402836,480000,550000,620000,∂Tokens/∂Capacity,Strong growth post-ChatGPT,SEC filings + projections
+γ|ε_FGT|² (Services),Output_Ypred,Free Cash Flow,ε_FGT²,69495,72764,73266,95000,110000,125000,∂FCF/∂Capex,Capex drag near-term,Macrotrends + analyst est.
+L(θᵗ⁺¹) (Information/Market),Valuation,GOOG_Price,Market_Implied,140,170,220,362,410,480,∂Valuation/∂Execution,AI momentum with FCF caution,Screenshot + market data
+Peer_Comparison,NVDA,GPU_Dominance,w_NVDA,495,140,208,250,-,-,High Jacobian on compute,Market leader in accelerators,Sidebar + historical
+Peer_Comparison,MSFT,Azure_Integration,w_MSFT,376,420,403,450,-,-,Balanced services,Stable but capex heavy,Sidebar
+Peer_Comparison,AMZN,AWS_Infrastructure,w_AMZN,150,180,244,280,-,-,High capex sensitivity,$200B 2026 capex,Sidebar + reports
+Scenario,Base,All Layers,Medium,NA,NA,NA,Base,Base,Base,NA,Balanced execution,Historical + projected
+Scenario,High_Diversification,Intel Weight,High,NA,NA,NA,+16% FCF,NA,NA,∂FCF/∂w_Intel,Lower supply risk,Previous sensitivity

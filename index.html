@@ -1,0 +1,692 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Anthropic · The Epochal Jacobian</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@300;400;500&family=IBM+Plex+Serif:ital,wght@0,300;0,400;1,300&display=swap" rel="stylesheet" />
+  <style>
+    /* ── Reset & base ── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --font-sans:   "IBM Plex Sans",   system-ui, sans-serif;
+      --font-serif:  "IBM Plex Serif",  Georgia,   serif;
+      --font-mono:   "IBM Plex Mono",   monospace;
+
+      --ink:         #1a1a18;
+      --ink-mid:     #4a4a45;
+      --ink-muted:   #7a7a73;
+      --rule:        #d8d7d0;
+      --bg:          #f5f4ef;
+      --surface:     #ffffff;
+      --accent:      #1d5c9e;
+      --accent-warm: #b04a1c;
+      --teal:        #0e6e55;
+      --amber:       #9a6000;
+
+      --page-max:    900px;
+      --pad-x:       clamp(1.25rem, 5vw, 3.5rem);
+      --pad-top:     3rem;
+      --pad-bottom:  4rem;
+      --section-gap: 3rem;
+    }
+
+    html { background: var(--bg); color: var(--ink); font-family: var(--font-sans); font-size: 16px; line-height: 1.6; }
+
+    body {
+      max-width: var(--page-max);
+      margin: 0 auto;
+      padding: var(--pad-top) var(--pad-x) var(--pad-bottom);
+    }
+
+    /* ── Typography ── */
+    h1 { font-family: var(--font-serif); font-size: clamp(1.75rem, 4vw, 2.5rem); font-weight: 300; line-height: 1.2; letter-spacing: -0.01em; margin-bottom: 0.75rem; }
+    h2 { font-family: var(--font-sans);  font-size: 1rem;  font-weight: 500; text-transform: uppercase; letter-spacing: 0.1em; color: var(--ink-muted); margin-bottom: 0.5rem; }
+    h3 { font-family: var(--font-serif); font-size: 1.25rem; font-weight: 400; font-style: italic; margin-bottom: 0.5rem; }
+    p  { margin-bottom: 1rem; color: var(--ink-mid); font-weight: 300; }
+    p:last-child { margin-bottom: 0; }
+
+    code, .mono { font-family: var(--font-mono); font-size: 0.85em; color: var(--accent); }
+    .eq { font-family: var(--font-mono); font-size: 0.88rem; color: var(--ink); background: var(--surface); border-left: 2px solid var(--accent); padding: 0.6rem 1rem; margin: 1rem 0; border-radius: 0 4px 4px 0; line-height: 1.9; }
+
+    hr { border: none; border-top: 1px solid var(--rule); margin: var(--section-gap) 0; }
+
+    /* ── Header ── */
+    header { margin-bottom: var(--section-gap); }
+    .eyebrow { font-family: var(--font-mono); font-size: 0.72rem; color: var(--ink-muted); text-transform: uppercase; letter-spacing: 0.12em; margin-bottom: 1rem; }
+    .subtitle { font-family: var(--font-serif); font-size: 1.1rem; font-weight: 300; font-style: italic; color: var(--ink-mid); margin-top: 0.5rem; border-top: 1px solid var(--rule); padding-top: 0.75rem; }
+    .contributors { display: flex; gap: 1.5rem; margin-top: 1.25rem; flex-wrap: wrap; }
+    .contributor { font-family: var(--font-mono); font-size: 0.72rem; color: var(--ink-muted); }
+    .contributor span { color: var(--ink); font-weight: 500; }
+
+    /* ── Phase navigation ── */
+    .phase-nav { display: flex; gap: 0.4rem; flex-wrap: wrap; margin-bottom: 1.5rem; }
+    .phase-btn {
+      font-family: var(--font-mono); font-size: 0.72rem;
+      padding: 0.3rem 0.75rem; border-radius: 2px;
+      border: 1px solid var(--rule); background: var(--surface);
+      color: var(--ink-muted); cursor: pointer;
+      transition: all 0.15s; letter-spacing: 0.04em;
+    }
+    .phase-btn:hover { border-color: var(--accent); color: var(--accent); }
+    .phase-btn.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+
+    /* ── Narrative block ── */
+    .narrative { border-left: 3px solid var(--rule); padding-left: 1.25rem; margin-bottom: 1.75rem; transition: border-color 0.3s; }
+    .narrative.demand  { border-color: var(--amber); }
+    .narrative.infra   { border-color: var(--accent); }
+    .narrative.strain  { border-color: var(--accent-warm); }
+    .narrative.intel   { border-color: var(--teal); }
+    .narrative.equil   { border-color: var(--ink-muted); }
+    .narrative h3 { margin-bottom: 0.35rem; font-style: normal; font-weight: 500; font-size: 1rem; color: var(--ink); }
+    .narrative p { font-size: 0.92rem; line-height: 1.7; }
+
+    /* ── Metrics row ── */
+    .metrics { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1.5rem; }
+    .metric { background: var(--surface); border: 1px solid var(--rule); border-radius: 4px; padding: 1rem 1.25rem; }
+    .metric-label { font-family: var(--font-mono); font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.1em; color: var(--ink-muted); margin-bottom: 0.4rem; }
+    .metric-val { font-family: var(--font-serif); font-size: 1.6rem; font-weight: 300; color: var(--ink); line-height: 1; margin-bottom: 0.25rem; }
+    .metric-sub { font-size: 0.78rem; color: var(--ink-muted); }
+    .metric-delta { font-family: var(--font-mono); font-size: 0.75rem; margin-top: 0.4rem; }
+    .metric-delta.pos { color: var(--teal); }
+    .metric-delta.neu { color: var(--ink-muted); }
+
+    /* ── Eigenmode bars ── */
+    .eigenmode-section { margin-bottom: 1.5rem; }
+    .em-row { display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.5rem; }
+    .em-name { font-family: var(--font-mono); font-size: 0.72rem; color: var(--ink-mid); width: 110px; flex-shrink: 0; }
+    .em-bar-bg { flex: 1; height: 5px; background: var(--rule); border-radius: 2px; overflow: hidden; }
+    .em-bar { height: 100%; border-radius: 2px; transition: width 0.55s cubic-bezier(.4,0,.2,1); }
+    .em-bar.demand  { background: var(--amber); }
+    .em-bar.infra   { background: var(--accent); }
+    .em-bar.divers  { background: var(--teal); }
+    .em-bar.service { background: var(--accent-warm); }
+    .em-val { font-family: var(--font-mono); font-size: 0.72rem; color: var(--ink-muted); width: 30px; text-align: right; flex-shrink: 0; }
+
+    /* ── State equation ── */
+    .state-section { margin-bottom: 1.5rem; }
+    .state-comment { font-size: 0.82rem; color: var(--ink-muted); line-height: 1.6; margin-top: 0.5rem; }
+
+    /* ── Jacobian matrix ── */
+    .jac-wrap { display: flex; gap: 0.5rem; align-items: flex-start; margin: 1rem 0; }
+    .jrow-labels { display: flex; flex-direction: column; gap: 3px; padding-top: 22px; }
+    .jrow-label { font-family: var(--font-mono); font-size: 0.65rem; color: var(--ink-muted); height: 28px; display: flex; align-items: center; }
+    .jmatrix { flex: 1; }
+    .jcol-labels { display: grid; grid-template-columns: repeat(5, 1fr); gap: 3px; margin-bottom: 3px; }
+    .jcol-label { font-family: var(--font-mono); font-size: 0.6rem; color: var(--ink-muted); text-align: center; line-height: 1.2; }
+    .jgrid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 3px; }
+    .jcell {
+      height: 28px; border-radius: 2px;
+      display: flex; align-items: center; justify-content: center;
+      font-family: var(--font-mono); font-size: 0.65rem; font-weight: 500;
+      transition: background 0.4s, color 0.4s;
+    }
+
+    /* ── Off-diagonal coupling ── */
+    .coupling-section { margin-bottom: 1.5rem; }
+    .coupling-row { display: flex; justify-content: space-between; align-items: baseline; padding: 0.6rem 0; border-bottom: 1px solid var(--rule); gap: 1rem; }
+    .coupling-row:last-child { border-bottom: none; }
+    .coupling-name { font-family: var(--font-mono); font-size: 0.78rem; color: var(--ink); flex-shrink: 0; }
+    .coupling-interp { font-size: 0.78rem; color: var(--ink-muted); }
+    .coupling-val { font-family: var(--font-mono); font-size: 0.82rem; font-weight: 500; flex-shrink: 0; }
+    .val-pos { color: var(--teal); }
+    .val-neg { color: var(--accent-warm); }
+    .val-neu { color: var(--ink-muted); }
+
+    /* ── Ukubona bridge ── */
+    .ukubona-section { border-top: 2px solid var(--teal); padding-top: 1rem; margin-bottom: 1.5rem; }
+    .ukubona-title { font-family: var(--font-mono); font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.1em; color: var(--teal); margin-bottom: 0.75rem; }
+    .ub-row { display: flex; justify-content: space-between; padding: 0.45rem 0; border-bottom: 1px solid var(--rule); font-size: 0.82rem; }
+    .ub-row:last-child { border-bottom: none; }
+    .ub-left { color: var(--ink-muted); }
+    .ub-right { color: var(--ink); font-weight: 500; text-align: right; }
+
+    /* ── Prose sections ── */
+    .prose-section { margin-bottom: var(--section-gap); }
+    .prose-section h2 { margin-bottom: 1rem; }
+    .prose-section p { max-width: 68ch; }
+
+    /* ── Closing synthesis ── */
+    .synthesis { background: var(--ink); color: var(--bg); padding: 2rem 2rem; border-radius: 4px; margin: var(--section-gap) 0; }
+    .synthesis h3 { color: #fff; font-family: var(--font-serif); font-style: italic; font-weight: 300; font-size: 1.2rem; margin-bottom: 1rem; }
+    .synthesis p { color: rgba(245,244,239,0.75); font-weight: 300; }
+    .synthesis .mono { color: #7ec8a0; }
+    .synthesis-eq { font-family: var(--font-mono); font-size: 0.82rem; color: #7ec8a0; background: rgba(255,255,255,0.07); border-left: 2px solid #7ec8a0; padding: 0.6rem 1rem; margin: 0.75rem 0; border-radius: 0 4px 4px 0; line-height: 1.9; }
+
+    /* ── Footer ── */
+    footer { border-top: 1px solid var(--rule); padding-top: 1.5rem; margin-top: var(--section-gap); }
+    .footer-grid { display: flex; justify-content: space-between; align-items: flex-start; gap: 2rem; flex-wrap: wrap; }
+    .footer-col { font-family: var(--font-mono); font-size: 0.7rem; color: var(--ink-muted); line-height: 1.8; }
+    .footer-col strong { color: var(--ink); font-weight: 500; display: block; margin-bottom: 0.25rem; }
+
+    /* ── Responsive ── */
+    @media (max-width: 600px) {
+      .metrics { grid-template-columns: 1fr; }
+      .jrow-label { font-size: 0.58rem; }
+      .jcol-label { font-size: 0.55rem; }
+      .jcell { font-size: 0.58rem; }
+      .footer-grid { flex-direction: column; gap: 1rem; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .em-bar, .jcell { transition: none; }
+    }
+  </style>
+</head>
+
+<body>
+
+  <!-- ══ HEADER ══ -->
+  <header>
+    <div class="eyebrow">xAI · Google · OpenAI · Anthropic · Ukubona</div>
+    <h1>The Epochal Jacobian<br>and the Moving Manifold</h1>
+    <p class="subtitle">
+      A dynamical-systems reading of Alphabet's AI infrastructure epoch, 2023–2028
+    </p>
+    <div class="contributors">
+      <div class="contributor">Framework <span>Ukubona LLC</span></div>
+      <div class="contributor">Case study <span>Alphabet / Intel deal</span></div>
+      <div class="contributor">Dataset <span>alphabet_intel_neuron_jacobian_dataset_extended.csv</span></div>
+      <div class="contributor">Analysis layer <span>Anthropic</span></div>
+    </div>
+  </header>
+
+  <hr />
+
+  <!-- ══ OPENING CLAIM ══ -->
+  <section class="prose-section">
+    <h2>The central finding</h2>
+    <p>
+      What xAI framed, Google computed, and OpenAI named precisely: this is not a classical
+      Jacobian evaluated around a point. It is an <em>epochal Jacobian</em> — each column
+      a historical regime transition, each perturbation a structural shock rather than an
+      infinitesimal nudge. The manifold is moving. <code>J(s,t)</code> is itself a function of time.
+    </p>
+    <p>
+      The state equation <code>ṡ = J(s,t)·s</code> governs the evolution. A valuation model
+      asks what <code>s(t)</code> is worth. The dynamical-systems formulation asks what governs
+      <code>ds/dt</code>. The answer is the Jacobian — and as the state evolves, <code>J</code>
+      changes regime. The 2023 system had a nearly diagonal <code>J</code> (one degree of freedom:
+      demand). The 2028 system has a full, off-diagonal-rich <code>J</code> (four coupled degrees).
+    </p>
+  </section>
+
+  <hr />
+
+  <!-- ══ INTERACTIVE EPOCHAL JACOBIAN ══ -->
+  <section>
+    <h2>Epochal Jacobian — step through the regimes</h2>
+
+    <div class="phase-nav" id="phaseNav">
+      <button class="phase-btn active" onclick="setPhase(0)">2023→24 · demand</button>
+      <button class="phase-btn" onclick="setPhase(1)">2024→25 · ramp</button>
+      <button class="phase-btn" onclick="setPhase(2)">2025→26 · strain</button>
+      <button class="phase-btn" onclick="setPhase(3)">2026→27 · Intel</button>
+      <button class="phase-btn" onclick="setPhase(4)">2027→28 · equilibrium</button>
+    </div>
+
+    <!-- Narrative -->
+    <div class="narrative demand" id="narrative">
+      <h3 id="narTitle">Demand eigenmode λ_D dominates</h3>
+      <p id="narBody">ChatGPT shock reveals massive latent demand. Infrastructure barely moved; revenue response was enormous. ∂f/∂Capacity dominates — every marginal unit of existing compute generated outsized token output. The manifold's dominant eigenvector pointed squarely at demand discovery. J is nearly diagonal: self-reinforcing, no off-diagonal coupling yet.</p>
+    </div>
+
+    <!-- Metrics -->
+    <div class="metrics">
+      <div class="metric">
+        <div class="metric-label">Dominant eigenmode</div>
+        <div class="metric-val" id="eigenVal">λ_D</div>
+        <div class="metric-sub" id="eigenSub">Demand discovery</div>
+      </div>
+      <div class="metric">
+        <div class="metric-label">Leading ∂ entry</div>
+        <div class="metric-val" id="jacVal">∂f/∂C</div>
+        <div class="metric-sub" id="jacSub">Token yield on capacity</div>
+        <div class="metric-delta pos" id="jacDelta">↑ 0.76 normalised</div>
+      </div>
+    </div>
+
+    <!-- Eigenmode bars -->
+    <div class="eigenmode-section">
+      <h2 style="margin-bottom:0.75rem;">Eigenmode decomposition</h2>
+      <div class="em-row">
+        <div class="em-name">λ_D  demand</div>
+        <div class="em-bar-bg"><div class="em-bar demand" id="bar-demand" style="width:76%"></div></div>
+        <div class="em-val" id="val-demand">0.76</div>
+      </div>
+      <div class="em-row">
+        <div class="em-name">λ_I  infra</div>
+        <div class="em-bar-bg"><div class="em-bar infra" id="bar-infra" style="width:0%"></div></div>
+        <div class="em-val" id="val-infra">0.00</div>
+      </div>
+      <div class="em-row">
+        <div class="em-name">λ_Intel  divers.</div>
+        <div class="em-bar-bg"><div class="em-bar divers" id="bar-divers" style="width:0%"></div></div>
+        <div class="em-val" id="val-divers">0.00</div>
+      </div>
+      <div class="em-row">
+        <div class="em-name">λ_S  service/FCF</div>
+        <div class="em-bar-bg"><div class="em-bar service" id="bar-service" style="width:13%"></div></div>
+        <div class="em-val" id="val-service">0.13</div>
+      </div>
+    </div>
+
+    <!-- State equation -->
+    <div class="state-section">
+      <h2 style="margin-bottom:0.5rem;">State vector · ṡ = J(s,t)·s</h2>
+      <div class="eq">
+        s(t) = [ θᵗ, L, f, γ|ε|² ]ᵀ<br>
+        <span id="stateVec">s ≈ [45k, 1.0, 307k, 69k]</span><br>
+        ṡ = J(s,t)·s
+      </div>
+      <p class="state-comment" id="stateComment">
+        The Jacobian is not static — J(s,t) changes regime as the manifold rotates. This epoch: J is diagonal-heavy (self-reinforcing demand). Off-diagonal coupling terms are near zero.
+      </p>
+    </div>
+
+    <!-- Jacobian matrix -->
+    <h2 style="margin-bottom:0.5rem;">J(s,t) at this epoch — normalised</h2>
+    <div class="jac-wrap">
+      <div class="jrow-labels">
+        <div class="jrow-label">θᵗ</div>
+        <div class="jrow-label">L</div>
+        <div class="jrow-label">f</div>
+        <div class="jrow-label">γ|ε|²</div>
+      </div>
+      <div class="jmatrix">
+        <div class="jcol-labels">
+          <div class="jcol-label">Capex</div>
+          <div class="jcol-label">w_Intel</div>
+          <div class="jcol-label">w_TSMC</div>
+          <div class="jcol-label">w_Inhouse</div>
+          <div class="jcol-label">Demand</div>
+        </div>
+        <div class="jgrid" id="jacGrid"></div>
+      </div>
+    </div>
+
+    <!-- Off-diagonal coupling -->
+    <div class="coupling-section" style="margin-top:1.5rem;">
+      <h2 style="margin-bottom:0.75rem;">Off-diagonal coupling — Intel as perturbation</h2>
+      <div id="couplingRows"></div>
+    </div>
+
+    <!-- Ukubona bridge -->
+    <div class="ukubona-section">
+      <div class="ukubona-title">Ukubona · sovereignty layer</div>
+      <div id="ukubona-rows"></div>
+    </div>
+  </section>
+
+  <hr />
+
+  <!-- ══ PROSE: TMVES COMPRESSION ══ -->
+  <section class="prose-section">
+    <h2>TMVES reads directly onto this system</h2>
+    <p>
+      The compression chain is not metaphor here. It maps exactly onto the epochal Jacobian structure.
+    </p>
+    <p>
+      <strong>Tensor</strong> is the raw ecosystem state — the full multi-dimensional object of capex allocations,
+      supplier weights, regulatory pressure, demand signals, and peer competition captured in the extended dataset.
+    </p>
+    <p>
+      <strong>Matrix</strong> is <code>J(s,t)</code> itself — the interaction structure between pentadic layers.
+      This is what the heatmap computes: partial derivatives encoding how each layer is sensitive to each
+      input at each epoch. The matrix is the Jacobian.
+    </p>
+    <p>
+      <strong>Vector</strong> is the column that dominates at each transition. In 2023→24 it is
+      <code>∂f/∂Capacity</code>. In 2025→26 it is <code>∂θᵗ/∂Capex</code>. In 2026→27 it is
+      <code>∂L/∂w_Intel</code>. These are the dominant sensitivity directions — the vectors
+      carrying the system's action.
+    </p>
+    <p>
+      <strong>Eigenmode</strong> is the regime itself — <code>λ_D</code>, <code>λ_I</code>,
+      <code>λ_Intel</code>. Each epoch has a leading eigenvector that names what the system is
+      actually doing. The eigenmode is what you would miss looking at only one year's data.
+    </p>
+    <p>
+      <strong>Scalar</strong> is <code>λ_max</code>. In the equilibrium epoch it represents
+      something like <em>sovereignty</em>: the degree to which Alphabet controls its own
+      supply-chain geometry rather than being subject to external perturbations.
+    </p>
+  </section>
+
+  <hr />
+
+  <!-- ══ PROSE: OFF-DIAGONAL ══ -->
+  <section class="prose-section">
+    <h2>The Intel deal is an off-diagonal entry</h2>
+    <p>
+      OpenAI's sharpest observation: Intel is not an on-diagonal Jacobian entry. The diagonal
+      <code>J[L, L]</code> represents compute scaling within the existing architecture.
+      The off-diagonal <code>J[L, w_Intel]</code> represents a coupling between supplier allocation
+      and compute labor that did not exist before. When that entry fires at 1.00 in 2026→27,
+      the Jacobian's geometry changes. You cannot compress that away. It is a topological event in the manifold.
+    </p>
+    <p>
+      Intel is not increasing capacity directly. It is increasing capacity through resilience.
+      When eigenvalues are distributed rather than concentrated, perturbations attenuate. A small
+      shock to any one input in 2028 propagates through the entire coupled system and dissipates —
+      rather than amplifying along a single concentrated eigenvector, as it would have in 2023.
+    </p>
+    <div class="eq">
+      ∂y/∂x_Intel  =  f′(·) · w_Intel        (sensitivity to Intel input)<br>
+      ∂y/∂w_Intel  =  f′(·) · x_Intel        (sensitivity to Intel allocation)<br>
+      J[L, w_Intel] → 0 (2023)  →  1.00 (2027)  ← topological transition
+    </div>
+  </section>
+
+  <hr />
+
+  <!-- ══ SYNTHESIS BLOCK ══ -->
+  <div class="synthesis">
+    <h3>Ukubona's position in this Jacobian landscape</h3>
+    <p>
+      What the Alphabet / Intel / NVDA analysis makes legible is what Ukubona is <em>not</em> building.
+      Alphabet acquires hardware sovereignty — control over the physical substrate of compute — by
+      adjusting supplier weights. Ukubona's sovereignty claim operates at a completely different layer:
+      the <span class="mono">digital prior</span>, the patient's append-only event stream, the
+      irreversible inversion of the locus of control from institutions to individuals.
+    </p>
+    <p style="margin-top:1rem;">
+      In the pentadic nesting (patient → kin → clinical ecosystem → federated regulators → civilisational planners),
+      Alphabet's maneuver is at layer 3→4: securing the clinical ecosystem against supply-chain capture
+      by civilisational-scale infrastructure players. Ukubona's regulatory architecture addresses layer 1→2:
+      ensuring the patient's kin-network retains epistemic sovereignty over the digital prior, regardless
+      of which hyperscaler is running the inference.
+    </p>
+    <div class="synthesis-eq">
+      Alphabet:  dominant off-diagonal  =  ∂L / ∂w_Intel<br>
+      Ukubona:   dominant off-diagonal  =  ∂sovereignty / ∂consent_architecture<br>
+      <br>
+      Alphabet's λ_max  →  supply-chain resilience<br>
+      Ukubona's  λ_max  →  λ_patient  (sovereignty over one's own manifold)
+    </div>
+    <p>
+      The scalar at the apex of the TMVES compression chain is the same in both systems —
+      just expressed in different coordinates. Control over the geometry of one's own manifold.
+    </p>
+  </div>
+
+  <hr />
+
+  <!-- ══ FOOTER ══ -->
+  <footer>
+    <div class="footer-grid">
+      <div class="footer-col">
+        <strong>Framework</strong>
+        TMVES · Tensor → Matrix → Vector → Eigenmode → Scalar<br>
+        Pentadic nesting · Fractal neuron model<br>
+        Epochal Jacobian · ṡ = J(s,t)·s
+      </div>
+      <div class="footer-col">
+        <strong>Dataset</strong>
+        alphabet_intel_neuron_jacobian_dataset_extended.csv<br>
+        Baseline: 2023 (ChatGPT inflection point)<br>
+        Horizon: 2028 (Intel >3M TPU delivery)
+      </div>
+      <div class="footer-col">
+        <strong>Contributors</strong>
+        xAI · Google · OpenAI · Anthropic<br>
+        Ukubona LLC · sovereignty infrastructure<br>
+        Not financial advice · analysis only
+      </div>
+      <div class="footer-col">
+        <strong>Generated</strong>
+        June 2026<br>
+        claude-sonnet-4-6<br>
+        ukubona-llc.github.io
+      </div>
+    </div>
+  </footer>
+
+</body>
+
+<script>
+  const phases = [
+    {
+      navClass: "demand",
+      eigenVal: "λ_D",       eigenSub: "Demand discovery",
+      jacVal:   "∂f/∂C",     jacSub:   "Token yield on capacity",
+      jacDelta: "↑ 0.76 normalised", jacPos: true,
+      bars:    { demand: 76, infra:  0, divers:  0, service: 13 },
+      barVals: { demand: "0.76", infra: "0.00", divers: "0.00", service: "0.13" },
+      narTitle: "Demand eigenmode λ_D dominates",
+      narBody:  "ChatGPT shock reveals massive latent demand. Infrastructure barely moved; revenue response was enormous. ∂f/∂Capacity dominates — every marginal unit of existing compute generated outsized token output. The manifold's dominant eigenvector pointed squarely at demand discovery. J is nearly diagonal: self-reinforcing, no off-diagonal coupling yet.",
+      stateVec: "s ≈ [45k, 1.0, 307k, 69k]",
+      stateComment: "J is diagonal-heavy this epoch — self-reinforcing demand eigenmode. Off-diagonal coupling terms near zero. Intel node (x₃) carries zero weight. The manifold has not yet registered the supply constraint.",
+      jac: [
+        0.00, 0.00, 0.00, 0.00, 0.76,
+        0.00, 0.00, 0.00, 0.00, 0.10,
+        0.00, 0.00, 0.00, 0.00, 0.76,
+        0.13, 0.00, 0.00, 0.00, 0.00,
+      ],
+      coupling: [
+        { name: "∂θᵗ / ∂w_Intel", val: "0.00", interp: "Intel not yet a variable — supply-chain monoculture", cls: "val-neu" },
+        { name: "∂f / ∂w_Intel",  val: "0.00", interp: "Token output insensitive to Intel (chip doesn't exist yet)", cls: "val-neu" },
+        { name: "∂(γ|ε|²) / ∂Capex", val: "0.13", interp: "Weak FCF response — capex not yet mobilised", cls: "val-pos" },
+      ],
+      ukubona: [
+        { left: "TMVES phase",      right: "Tensor — raw ecosystem shock" },
+        { left: "Patient analogy",  right: "Symptom onset — latent condition exposed" },
+        { left: "Sovereignty risk", right: "Low — demand within existing architecture" },
+        { left: "Regulation",       right: "Absent — governance lag typical of phase 1" },
+      ]
+    },
+    {
+      navClass: "infra",
+      eigenVal: "λ_D / λ_I",    eigenSub: "Transition — mixed",
+      jacVal:   "∂f/∂C + ∂θ/∂K", jacSub: "Yield + infra building",
+      jacDelta: "↑ 0.48 / ↑ 0.12", jacPos: true,
+      bars:    { demand: 48, infra: 12, divers:  0, service:  0 },
+      barVals: { demand: "0.48", infra: "0.12", divers: "0.00", service: "0.00" },
+      narTitle: "Mixed transition — demand still leads, infrastructure begins",
+      narBody:  "Hyperscalers begin mobilising capital. Token yield remains positive (0.48) but slowing as infrastructure spend absorbs resources. The Jacobian's dominant eigenvector begins rotating — λ_D weakens, λ_I emerges. This is the manifold beginning to curve.",
+      stateVec: "s ≈ [73k, 1.0, 376k, 73k]",
+      stateComment: "J begins gaining off-diagonal mass in the θᵗ row — infrastructure sensitivity to capex rising. Intel weight still zero. The manifold's curvature is increasing: the system becomes sensitive to inputs it previously ignored.",
+      jac: [
+        0.12, 0.00, 0.00, 0.00, 0.30,
+        0.05, 0.00, 0.00, 0.00, 0.20,
+        0.10, 0.00, 0.00, 0.00, 0.48,
+        0.00, 0.00, 0.00, 0.00, 0.10,
+      ],
+      coupling: [
+        { name: "∂θᵗ / ∂Capex",   val: "0.12", interp: "Infrastructure sensitivity awakening", cls: "val-pos" },
+        { name: "∂f / ∂Capacity", val: "0.48", interp: "Token yield decelerating as supply fills existing slack", cls: "val-pos" },
+        { name: "∂L / ∂w_Intel",  val: "0.00", interp: "Intel node still dormant — no coupling yet", cls: "val-neu" },
+      ],
+      ukubona: [
+        { left: "TMVES phase",      right: "Matrix — interaction structure forming" },
+        { left: "Patient analogy",  right: "Diagnosis — understanding the anatomy of the constraint" },
+        { left: "Sovereignty risk", right: "Moderate — single-supplier dependence becoming visible" },
+        { left: "Regulation",       right: "Weak — chip export controls begin appearing" },
+      ]
+    },
+    {
+      navClass: "strain",
+      eigenVal: "λ_I",   eigenSub: "Infrastructure eigenmode",
+      jacVal:   "∂θᵗ/∂K", jacSub: "Pure infra accumulation",
+      jacDelta: "↑ 1.00 (peak)", jacPos: true,
+      bars:    { demand:  0, infra: 100, divers: 50, service: 100 },
+      barVals: { demand: "0.00", infra: "1.00", divers: "0.50", service: "1.00" },
+      narTitle: "Infrastructure eigenmode λ_I — the silent epoch",
+      narBody:  "The most structurally significant column. ∂θᵗ/∂Capex = 1.00 while ∂f/∂Capacity = 0.00. Every dollar went into concrete, copper, transformers, cooling, substations. No marginal output. Pure infrastructure accumulation. The system is in a phase transition — building the substrate for the next operating regime.",
+      stateVec: "s ≈ [180k, 1.0, 480k, 95k]",
+      stateComment: "J becomes infrastructure-dominated. J[θᵗ, Capex] = 1.0 is the entire story this epoch. Intel weight begins its first non-zero entry (0.05) — the off-diagonal coupling term is being born. The manifold's geometry is changing.",
+      jac: [
+        1.00, 0.00, 0.00, 0.20, 0.00,
+        0.10, 0.50, 0.00, 0.10, 0.00,
+        0.00, 0.00, 0.20, 0.40, 0.00,
+        1.00, 0.10, 0.00, 0.50, 0.00,
+      ],
+      coupling: [
+        { name: "∂θᵗ / ∂Capex",   val: "1.00", interp: "Every marginal dollar fully absorbed by infrastructure — zero leakage to output", cls: "val-pos" },
+        { name: "∂f / ∂Capacity", val: "0.00", interp: "Token yield collapses — no spare capacity to activate", cls: "val-neg" },
+        { name: "∂L / ∂w_Intel",  val: "0.50", interp: "Intel coupling begins — first non-zero off-diagonal in compute row", cls: "val-pos" },
+      ],
+      ukubona: [
+        { left: "TMVES phase",      right: "Vector — dominant directions extracted" },
+        { left: "Patient analogy",  right: "Surgery — high risk, low output during procedure" },
+        { left: "Sovereignty risk", right: "Peak — maximum TSMC dependence before Intel transition" },
+        { left: "Regulation",       right: "Strong — $85B raise triggers AI concentration scrutiny" },
+      ]
+    },
+    {
+      navClass: "intel",
+      eigenVal: "λ_Intel", eigenSub: "Diversification eigenmode",
+      jacVal:   "∂L/∂w_Intel", jacSub: "Off-diagonal coupling fires",
+      jacDelta: "↑ 1.00 (peak)", jacPos: true,
+      bars:    { demand: 100, infra:  6, divers: 100, service: 68 },
+      barVals: { demand: "1.00", infra: "0.06", divers: "1.00", service: "0.68" },
+      narTitle: "Diversification eigenmode λ_Intel — off-diagonal ignites",
+      narBody:  "The Intel node fires. ∂L/∂w_Intel = 1.00 — the off-diagonal coupling term that was near zero for three years becomes the dominant Jacobian entry. This is not simply adding capacity. It is changing the geometry of the manifold. Simultaneously, token yield recovers (1.00) — the infrastructure epoch paid off.",
+      stateVec: "s ≈ [200k, 1.0, 550k, 110k]",
+      stateComment: "J becomes off-diagonal rich. The Intel row dominates. ∂f/∂Capacity recovers simultaneously — infrastructure built during 2025–26 now activates. The manifold has rotated: the dominant eigenvector is now diversification, not demand.",
+      jac: [
+        0.06, 0.80, 0.40, 0.50, 0.60,
+        0.10, 1.00, 0.60, 0.40, 0.30,
+        0.80, 0.70, 0.50, 0.60, 1.00,
+        0.68, 0.60, 0.40, 0.50, 0.68,
+      ],
+      coupling: [
+        { name: "∂L / ∂w_Intel",  val: "1.00", interp: "Off-diagonal coupling fully activated — Intel reshapes compute geometry", cls: "val-pos" },
+        { name: "∂f / ∂Capacity", val: "1.00", interp: "Token yield recovers — infrastructure epoch's activation function fires", cls: "val-pos" },
+        { name: "∂θᵗ / ∂Capex",  val: "0.06", interp: "Infrastructure sensitivity normalises — capex cycle completing", cls: "val-neu" },
+      ],
+      ukubona: [
+        { left: "TMVES phase",      right: "Eigenmode — λ_Intel is the leading eigenvector" },
+        { left: "Patient analogy",  right: "Recovery — new anatomy functional, adaptive capacity restored" },
+        { left: "Sovereignty risk", right: "Declining — dual-source architecture established" },
+        { left: "Regulation",       right: "Intel deal subject to export control review; US industrial policy benefit" },
+      ]
+    },
+    {
+      navClass: "equil",
+      eigenVal: "λ_eq",  eigenSub: "Multi-mode equilibrium",
+      jacVal:   "All rows", jacSub: "Distributed coupling",
+      jacDelta: "Stable 1.00 across f, L", jacPos: true,
+      bars:    { demand: 100, infra:  6, divers: 100, service: 68 },
+      barVals: { demand: "1.00", infra: "0.06", divers: "1.00", service: "0.68" },
+      narTitle: "Equilibrium — the manifold has stabilised at a new topology",
+      narBody:  "Multiple eigenmodes contribute simultaneously — demand, Intel coupling, FCF activation. The system moved from monoculture (λ_D) through infrastructure accumulation (λ_I) through diversification ignition (λ_Intel) to a distributed architecture. The Jacobian's leading eigenvalue is no longer rotating. Resilience, in spectral terms.",
+      stateVec: "s ≈ [220k, 1.0, 620k, 125k]",
+      stateComment: "J is full and approximately balanced. No single row dominates completely. Off-diagonal Intel terms remain strong. ṡ = J(s,t)·s is now a stable dynamical system — small perturbations attenuate rather than amplify. The 2023 manifold had one degree of freedom; the 2028 manifold has four.",
+      jac: [
+        0.06, 0.75, 0.50, 0.65, 0.60,
+        0.10, 1.00, 0.65, 0.50, 0.35,
+        0.80, 0.80, 0.55, 0.70, 1.00,
+        0.68, 0.70, 0.50, 0.60, 0.68,
+      ],
+      coupling: [
+        { name: "∂L / ∂w_Intel",      val: "1.00", interp: "Diversification coupling remains dominant — geometric stability", cls: "val-pos" },
+        { name: "∂f / ∂Capacity",     val: "1.00", interp: "Sustained token yield — manifold in productive regime", cls: "val-pos" },
+        { name: "∂(γ|ε|²) / ∂w_Intel", val: "0.70", interp: "FCF now positively coupled to Intel — supply resilience monetised", cls: "val-pos" },
+      ],
+      ukubona: [
+        { left: "TMVES phase",      right: "Scalar — λ_max is sovereignty" },
+        { left: "Patient analogy",  right: "Homeostasis — multi-system equilibrium, resilient to shocks" },
+        { left: "Sovereignty risk", right: "Low — Alphabet controls its supply-chain geometry" },
+        { left: "Regulation",       right: "Governance architecture sets — federated AI capacity established" },
+      ]
+    }
+  ];
+
+  /* ── cell color scale ── */
+  function cellStyle(v) {
+    if (v === 0) return { bg: "#f5f4ef", fg: "#c0bfb8" };
+    const stops = [
+      [0.1, "#dce8f5", "#185fa5"],
+      [0.2, "#b5d4f4", "#185fa5"],
+      [0.3, "#85b7eb", "#0c447c"],
+      [0.4, "#378add", "#fff"],
+      [0.5, "#1d9e75", "#fff"],
+      [0.6, "#0f6e56", "#fff"],
+      [0.7, "#ef9f27", "#fff"],
+      [0.8, "#ba7517", "#fff"],
+      [0.9, "#d85a30", "#fff"],
+      [1.0, "#993c1d", "#fff"],
+    ];
+    const idx = Math.min(Math.floor(v * 10), 9);
+    return { bg: stops[idx][0], fg: stops[idx][1] };
+  }
+
+  const navClasses = ["demand","ramp","strain","intel","equil"];
+
+  function setPhase(i) {
+    const p = phases[i];
+
+    /* nav */
+    document.querySelectorAll(".phase-btn").forEach((b, idx) => b.classList.toggle("active", idx === i));
+
+    /* narrative colour */
+    const nav = document.getElementById("narrative");
+    nav.className = "narrative " + p.navClass;
+    document.getElementById("narTitle").textContent = p.narTitle;
+    document.getElementById("narBody").textContent  = p.narBody;
+
+    /* metrics */
+    document.getElementById("eigenVal").textContent = p.eigenVal;
+    document.getElementById("eigenSub").textContent = p.eigenSub;
+    document.getElementById("jacVal").textContent   = p.jacVal;
+    document.getElementById("jacSub").textContent   = p.jacSub;
+    const jd = document.getElementById("jacDelta");
+    jd.textContent  = p.jacDelta;
+    jd.className    = "metric-delta " + (p.jacPos ? "pos" : "neu");
+
+    /* bars */
+    ["demand","infra","divers","service"].forEach(k => {
+      document.getElementById("bar-" + k).style.width = p.bars[k] + "%";
+      document.getElementById("val-" + k).textContent = p.barVals[k];
+    });
+
+    /* state */
+    document.getElementById("stateVec").textContent     = p.stateVec;
+    document.getElementById("stateComment").textContent = p.stateComment;
+
+    /* Jacobian grid */
+    const grid = document.getElementById("jacGrid");
+    grid.innerHTML = "";
+    p.jac.forEach(v => {
+      const cell = document.createElement("div");
+      cell.className = "jcell";
+      const { bg, fg } = cellStyle(v);
+      cell.style.background = bg;
+      cell.style.color       = fg;
+      cell.textContent       = v.toFixed(2);
+      grid.appendChild(cell);
+    });
+
+    /* coupling rows */
+    const cr = document.getElementById("couplingRows");
+    cr.innerHTML = "";
+    p.coupling.forEach(c => {
+      const row = document.createElement("div");
+      row.className = "coupling-row";
+      row.innerHTML =
+        `<div>
+           <div class="coupling-name">${c.name}</div>
+           <div class="coupling-interp">${c.interp}</div>
+         </div>
+         <div class="coupling-val ${c.cls}">${c.val}</div>`;
+      cr.appendChild(row);
+    });
+
+    /* ukubona rows */
+    const ur = document.getElementById("ukubona-rows");
+    ur.innerHTML = "";
+    p.ukubona.forEach(u => {
+      const row = document.createElement("div");
+      row.className = "ub-row";
+      row.innerHTML = `<div class="ub-left">${u.left}</div><div class="ub-right">${u.right}</div>`;
+      ur.appendChild(row);
+    });
+  }
+
+  setPhase(0);
+</script>
+</html>
